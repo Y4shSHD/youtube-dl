@@ -199,3 +199,32 @@ class HotStarPlaylistIE(HotStarBaseIE):
             if video.get('contentId')]
 
         return self.playlist_result(entries, playlist_id)
+    
+    
+class HotStarSeasonIE(HotStarBaseIE):
+    IE_NAME = 'hotstar:season'
+    _VALID_URL = r'https?://(?:www\.)?hotstar\.com/tv/[^/]+/s-\w+/seasons/[^/]+/ss-(?P<id>\w+)'
+    _TESTS = [{
+        'url': 'https://www.hotstar.com/tv/saraswatichandra/s-8/seasons/season-1/ss-8',
+        'info_dict': {
+            'id': '8',
+        },
+        'playlist_mincount': 35,
+    }, {
+        'url': 'https://www.hotstar.com/tv/saraswatichandra/s-8/seasons/season-3/ss-23',
+        'only_matching': True,
+    }]
+
+    def _real_extract(self, url):
+        season_id = self._match_id(url)
+
+        collection = self._call_api('o/v1/tray/find', season_id, 'uqId')
+
+        entries = [
+            self.url_result(
+                'https://www.hotstar.com/%s' % video['contentId'],
+                ie=HotStarIE.ie_key(), video_id=video['contentId'])
+            for video in collection['assets']['items']
+            if video.get('contentId')]
+
+        return self.season_result(entries, season_id)
